@@ -1,35 +1,56 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from "react";
+import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup"; // ✅ Import Signup
+import Profile from "./pages/Profile";
+import DealerDashboard from "./dealer/DealerDashboard";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+
+  // Check login status on component mount and when loginStatusChanged event is fired
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem("token");
+      const role = localStorage.getItem("role");
+      setIsLoggedIn(!!token);
+      setUserRole(role);
+    };
+
+    // Check immediately
+    checkAuthStatus();
+
+    // Listen for login status changes
+    window.addEventListener("loginStatusChanged", checkAuthStatus);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("loginStatusChanged", checkAuthStatus);
+    };
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="font-sans">
+      <Navbar isLoggedIn={isLoggedIn} userRole={userRole} />
+      <Routes>
+        {/* Default buyer home */}
+        <Route path="/" element={<Hero />} />
+
+        {/* Auth */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} /> {/* ✅ Added Signup */}
+
+        {/* Profile */}
+        <Route path="/profile" element={<Profile />} />
+
+        {/* Dealer Dashboard */}
+        <Route path="/dealer/dashboard" element={<DealerDashboard />} />
+      </Routes>
+    </div>
+  );
 }
 
-export default App
+export default App;
