@@ -43,7 +43,7 @@ function AddVehicle({ onVehicleAdded }) {
       console.log("Submitting vehicle:", formData);
 
       const res = await axios.post(
-        "https://evbikesservermernproject-jenv.onrender.com/dealer/vehicles", // ✅ make sure this matches backend
+        "https://evbikesservermernproject-jenv.onrender.com/dealers/vehicles", // ✅ make sure this matches backend
         data,
         {
           headers: {

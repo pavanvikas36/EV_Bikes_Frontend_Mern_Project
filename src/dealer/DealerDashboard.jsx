@@ -10,7 +10,6 @@ function DealerDashboard() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-
   const userRole = localStorage.getItem("role");
 
   // Redirect non-dealer users
@@ -47,14 +46,14 @@ function DealerDashboard() {
   const handleDeleteVehicle = async (vehicleId) => {
     if (!window.confirm("Are you sure to delete this vehicle?")) return;
     try {
-      await axios.delete(
-        `https://evbikesservermernproject-jenv.onrender.com/dealer/vehicles/${vehicleId}`,
+      const res = await axios.delete(
+        `https://evbikesservermernproject-jenv.onrender.com/dealers/deleteVehicle/${vehicleId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Vehicle deleted successfully!");
+      alert(res.data.message || "Vehicle deleted successfully!");
       fetchVehicles();
     } catch (err) {
-      console.error("Delete vehicle error:", err);
+      console.error("Delete vehicle error:", err.response?.data || err.message);
       alert("Failed to delete vehicle");
     }
   };
