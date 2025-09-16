@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Heart, Menu, X } from "lucide-react";
-import logo from "../assets/ChatGPT Image Sep 13, 2025, 03_02_34 PM.png";
+import logo from "../assets/ChatGPT Image Sep 13, 2025, 02_54_50 PM.png";
 
 function Navbar({ isLoggedIn, userRole }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -29,13 +29,12 @@ function Navbar({ isLoggedIn, userRole }) {
 
   return (
     <nav className="bg-black text-white px-6 py-4 flex justify-between items-center">
-      {/* Left: Logo + Name */}
+      {/* Left: Logo */}
       <div
         className="flex items-center gap-3 cursor-pointer flex-1"
         onClick={() => navigate("/")}
       >
         <img src={logo} alt="RevVolt Logo" className="h-10 w-10" />
-        <h1 className="text-2xl font-bold text-orange-500">RevVolt</h1>
       </div>
 
       {/* Center: Menu (only for buyers) */}
