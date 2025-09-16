@@ -6,7 +6,7 @@ import Sidebar from "./Sidebar";
 import Overview from "./Overview";
 import ManageVehicles from "./ManageVehicles";
 import Orders from "./Orders";
-import Profile from "../../pages/Profile";
+import Profile from "../pages/Profile";
 import AddVehicle from "./AddVehicle";
 
 function DealerDashboard() {
