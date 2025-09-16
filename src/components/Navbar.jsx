@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Heart } from "lucide-react";
+import { User, Heart, Menu, X } from "lucide-react";
 import logo from "../assets/ChatGPT Image Sep 13, 2025, 03_02_34 PM.png";
 
 function Navbar({ isLoggedIn, userRole }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -17,37 +18,48 @@ function Navbar({ isLoggedIn, userRole }) {
     navigate("/login");
   };
 
+  // Buyer menu items
+  const menuItems = [
+    { name: "Home", path: "/" },
+    { name: "EV Bikes", path: "/ev-bikes" },
+    { name: "Scooties", path: "/scooties" },
+    { name: "About", path: "/about" },
+    { name: "Contact", path: "/contact" },
+  ];
+
   return (
     <nav className="bg-black text-white px-6 py-4 flex justify-between items-center">
       {/* Left: Logo + Name */}
       <div
-        className="flex items-center gap-3 cursor-pointer"
+        className="flex items-center gap-3 cursor-pointer flex-1"
         onClick={() => navigate("/")}
       >
         <img src={logo} alt="RevVolt Logo" className="h-10 w-10" />
         <h1 className="text-2xl font-bold text-orange-500">RevVolt</h1>
       </div>
 
-      {/* Center: Menu */}
-      <ul className="flex gap-6 justify-center w-1/3">
-        <li
-          className="cursor-pointer hover:text-orange-400"
-          onClick={() => navigate("/")}
-        >
-          Home
-        </li>
-        <li className="cursor-pointer hover:text-orange-400">EV Bikes</li>
-        <li className="cursor-pointer hover:text-orange-400">Scooties</li>
-        <li className="cursor-pointer hover:text-orange-400">About</li>
-        <li className="cursor-pointer hover:text-orange-400">Contact</li>
-      </ul>
+      {/* Center: Menu (only for buyers) */}
+      {userRole === "buyer" && (
+        <ul className="hidden md:flex gap-6 justify-center flex-1">
+          {menuItems.map((item, idx) => (
+            <li
+              key={idx}
+              className="cursor-pointer hover:text-orange-400"
+              onClick={() => navigate(item.path)}
+            >
+              {item.name}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {/* Right: Search + Wishlist + User/Login */}
-      <div className="flex gap-4 items-center relative">
+      <div className="flex gap-4 items-center justify-end flex-1 relative">
+        {/* Search (hide on small screens) */}
         <input
           type="text"
           placeholder="Search..."
-          className="px-2 py-1 rounded text-black"
+          className="hidden md:block px-2 py-1 rounded text-black"
         />
 
         {isLoggedIn ? (
@@ -57,6 +69,7 @@ function Navbar({ isLoggedIn, userRole }) {
               onClick={() => navigate("/wishlist")}
             />
 
+            {/* User dropdown */}
             <div className="relative">
               <User
                 className="text-orange-500 cursor-pointer"
@@ -73,6 +86,7 @@ function Navbar({ isLoggedIn, userRole }) {
                   >
                     Profile
                   </button>
+
                   {userRole === "dealer" && (
                     <button
                       onClick={() => {
@@ -84,6 +98,7 @@ function Navbar({ isLoggedIn, userRole }) {
                       Dashboard
                     </button>
                   )}
+
                   <button
                     onClick={() => {
                       handleLogout();
@@ -105,7 +120,35 @@ function Navbar({ isLoggedIn, userRole }) {
             Login
           </button>
         )}
+
+        {/* Mobile menu toggle */}
+        {userRole === "buyer" && (
+          <button
+            className="md:hidden"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X /> : <Menu />}
+          </button>
+        )}
       </div>
+
+      {/* Mobile Menu Drawer */}
+      {isMobileMenuOpen && userRole === "buyer" && (
+        <div className="absolute top-16 left-0 w-full bg-black text-white flex flex-col items-center gap-4 py-4 md:hidden z-20">
+          {menuItems.map((item, idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                navigate(item.path);
+                setIsMobileMenuOpen(false);
+              }}
+              className="hover:text-orange-400"
+            >
+              {item.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Close dropdown when clicking outside */}
       {isDropdownOpen && (
