@@ -46,6 +46,7 @@ function DealerDashboard() {
   const handleDeleteVehicle = async (vehicleId) => {
     if (!window.confirm("Are you sure to delete this vehicle?")) return;
     try {
+      setLoading(true);
       const res = await axios.delete(
         `https://evbikesservermernproject-jenv.onrender.com/dealers/deleteVehicle/${vehicleId}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -54,7 +55,9 @@ function DealerDashboard() {
       fetchVehicles();
     } catch (err) {
       console.error("Delete vehicle error:", err.response?.data || err.message);
-      alert("Failed to delete vehicle");
+      alert(err.response?.data?.message || "Failed to delete vehicle");
+    } finally {
+      setLoading(false);
     }
   };
 
