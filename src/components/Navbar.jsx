@@ -34,7 +34,7 @@ function Navbar({ isLoggedIn, userRole }) {
         className="flex items-center gap-3 cursor-pointer flex-1"
         onClick={() => navigate("/")}
       >
-        <img src={logo} alt="RevVolt Logo" className="max-h-20 w-auto" />
+        <img src={logo} alt="RevVolt Logo" className="max-h-12 w-auto" />
       </div>
 
       {/* Center: Menu (only for buyers) */}
