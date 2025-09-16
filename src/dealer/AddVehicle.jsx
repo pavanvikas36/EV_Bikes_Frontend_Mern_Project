@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 
 function AddVehicle({ onVehicleAdded }) {
@@ -12,13 +12,14 @@ function AddVehicle({ onVehicleAdded }) {
     images: [],
   });
   const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const token = localStorage.getItem("token");
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (files) {
-      setFormData({ ...formData, images: Array.from(files) }); // ✅ FIX
+      setFormData({ ...formData, images: Array.from(files) });
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -28,6 +29,8 @@ function AddVehicle({ onVehicleAdded }) {
     e.preventDefault();
     try {
       setLoading(true);
+      setSuccessMessage("");
+
       const data = new FormData();
       data.append("brand", formData.brand);
       data.append("model", formData.model);
@@ -43,7 +46,7 @@ function AddVehicle({ onVehicleAdded }) {
       console.log("Submitting vehicle:", formData);
 
       const res = await axios.post(
-        "https://evbikesservermernproject-jenv.onrender.com/dealers/vehicles", // ✅ make sure this matches backend
+        "https://evbikesservermernproject-jenv.onrender.com/dealers/vehicles",
         data,
         {
           headers: {
@@ -53,7 +56,10 @@ function AddVehicle({ onVehicleAdded }) {
         }
       );
 
-      alert("Vehicle added successfully!");
+      console.log("Response:", res.data); // ✅ only log data, not whole res
+      setSuccessMessage("Vehicle added successfully!");
+
+      // reset form
       setFormData({
         brand: "",
         model: "",
@@ -73,9 +79,21 @@ function AddVehicle({ onVehicleAdded }) {
     }
   };
 
+  // ✅ Optional useEffect: clear success message after 3s
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
   return (
     <div className="max-w-md mx-auto bg-white p-6 rounded-xl shadow-lg">
       <h2 className="text-2xl font-bold mb-4 text-center">Add Vehicle</h2>
+      {successMessage && (
+        <p className="text-green-600 text-center mb-2">{successMessage}</p>
+      )}
+
       <form className="space-y-4" onSubmit={handleSubmit}>
         <input
           type="text"
