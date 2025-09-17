@@ -14,6 +14,7 @@ function Profile() {
     profilepic: null,
   });
   const [preview, setPreview] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const token = localStorage.getItem("token");
 
@@ -67,7 +68,7 @@ function Profile() {
       if (formData.email) data.append("email", formData.email);
       if (formData.password) data.append("password", formData.password);
       if (formData.profilepic && formData.profilepic.size > 0)
-        data.append("profileimage", formData.profilepic); // matches backend
+        data.append("profileimage", formData.profilepic);
 
       const res = await axios.put(
         "https://evbikesservermernproject-jenv.onrender.com/user/editProfile",
@@ -89,7 +90,10 @@ function Profile() {
 
       setEditMode(false);
       setErrorMessage("");
-      alert("Profile updated successfully!");
+      setSuccessMessage("Profile updated successfully!");
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error("Update profile error:", error);
       setErrorMessage(
@@ -100,129 +104,232 @@ function Profile() {
     }
   };
 
-  if (loading) return <p className="text-center mt-10">Loading...</p>;
-  if (errorMessage)
-    return <p className="text-center mt-10 text-red-600">{errorMessage}</p>;
+  // Loading skeleton
+  if (loading && !profile) {
+    return (
+      <div className="max-w-2xl mx-auto mt-10 bg-white p-8 rounded-xl shadow-md animate-pulse">
+        <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto mb-6"></div>
+        <div className="flex flex-col items-center mb-6">
+          <div className="w-32 h-32 bg-gray-200 rounded-full mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3, 4].map((item) => (
+            <div key={item} className="h-4 bg-gray-200 rounded w-full"></div>
+          ))}
+        </div>
+        <div className="h-10 bg-gray-200 rounded w-full mt-6"></div>
+      </div>
+    );
+  }
+
+  if (errorMessage && !profile) {
+    return (
+      <div className="max-w-md mx-auto mt-10 bg-white p-6 rounded-xl shadow-md">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-center">
+          <p>{errorMessage}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-3 text-red-700 underline"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!profile) return null;
 
   return (
-    <div className="max-w-md mx-auto mt-10 bg-white p-6 rounded-xl shadow-lg">
-      <h2 className="text-2xl font-bold mb-4 text-center">Profile</h2>
+    <div className="max-w-2xl mx-auto my-10 bg-white p-8 rounded-xl shadow-md">
+      <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">Your Profile</h2>
+      
+      {successMessage && (
+        <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+          {successMessage}
+        </div>
+      )}
+      
+      {errorMessage && (
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {errorMessage}
+        </div>
+      )}
 
       {!editMode ? (
-        <div className="space-y-4 text-gray-700">
-          {profile.profilepic && (
-            <img
-              src={profile.profilepic}
-              alt="Profile"
-              className="w-32 h-32 mx-auto rounded-full object-cover"
-            />
-          )}
-          <p>
-            <strong>Name:</strong> {profile.name}
-          </p>
-          <p>
-            <strong>Username:</strong> {profile.username}
-          </p>
-          <p>
-            <strong>Email:</strong> {profile.email}
-          </p>
-          <p>
-            <strong>Role:</strong> {profile.role}
-          </p>
+        <div className="space-y-6">
+          <div className="flex flex-col items-center">
+            {profile.profilepic ? (
+              <img
+                src={profile.profilepic}
+                alt="Profile"
+                className="w-40 h-40 rounded-full object-cover border-4 border-orange-100 shadow-md"
+              />
+            ) : (
+              <div className="w-40 h-40 rounded-full bg-gray-200 flex items-center justify-center border-4 border-orange-100">
+                <span className="text-gray-500 text-4xl font-bold">
+                  {profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}
+                </span>
+              </div>
+            )}
+            <h3 className="mt-4 text-xl font-semibold text-gray-800">{profile.name}</h3>
+            <p className="text-gray-600">{profile.role}</p>
+          </div>
+
+          <div className="bg-gray-50 p-6 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Username</p>
+                <p className="text-gray-800">{profile.username}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Email</p>
+                <p className="text-gray-800">{profile.email}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Role</p>
+                <p className="text-gray-800 capitalize">{profile.role}</p>
+              </div>
+            </div>
+          </div>
+
           <button
             onClick={() => setEditMode(true)}
-            className="mt-4 w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition"
+            className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition font-medium shadow-md hover:shadow-lg"
+            disabled={loading}
           >
-            Edit Profile
+            {loading ? "Loading..." : "Edit Profile"}
           </button>
         </div>
       ) : (
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="text-center">
-            {preview && (
-              <img
-                src={preview}
-                alt="Preview"
-                className="w-32 h-32 mx-auto rounded-full object-cover mb-2"
+            <div className="relative inline-block">
+              {preview ? (
+                <img
+                  src={preview}
+                  alt="Preview"
+                  className="w-40 h-40 mx-auto rounded-full object-cover border-4 border-orange-100 shadow-md"
+                />
+              ) : profile.profilepic ? (
+                <img
+                  src={profile.profilepic}
+                  alt="Profile"
+                  className="w-40 h-40 mx-auto rounded-full object-cover border-4 border-orange-100 shadow-md"
+                />
+              ) : (
+                <div className="w-40 h-40 mx-auto rounded-full bg-gray-200 flex items-center justify-center border-4 border-orange-100">
+                  <span className="text-gray-500 text-4xl font-bold">
+                    {formData.name ? formData.name.charAt(0).toUpperCase() : 'U'}
+                  </span>
+                </div>
+              )}
+              
+              <label className="absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-md cursor-pointer border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <input
+                  type="file"
+                  name="profilepic"
+                  accept="image/*"
+                  onChange={handleChange}
+                  className="hidden"
+                />
+              </label>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">Click on the camera icon to change your photo</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Name
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+                placeholder="Your name"
               />
-            )}
-            <input
-              type="file"
-              name="profilepic"
-              accept="image/*"
-              onChange={handleChange}
-              className="w-full"
-            />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Username
+              </label>
+              <input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+                placeholder="Your username"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+                placeholder="Your email"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="New password (leave blank to keep current)"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border rounded bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
+          <div className="flex space-x-4 pt-4">
+            <button
+              type="submit"
+              className="flex-1 bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition font-medium shadow-md hover:shadow-lg"
+              disabled={loading}
+            >
+              {loading ? "Updating..." : "Update Profile"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setEditMode(false);
+                setFormData({
+                  name: profile.name || "",
+                  username: profile.username || "",
+                  email: profile.email || "",
+                  password: "",
+                  profilepic: null,
+                });
+                setPreview(profile.profilepic || null);
+                setErrorMessage("");
+              }}
+              className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 transition font-medium"
+              disabled={loading}
+            >
+              Cancel
+            </button>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Username
-            </label>
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border rounded bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border rounded bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Leave blank to keep current password"
-              className="w-full px-3 py-2 border rounded bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition"
-          >
-            Update Profile
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setEditMode(false)}
-            className="w-full bg-gray-300 text-black py-2 rounded-lg hover:bg-gray-400 transition mt-2"
-          >
-            Cancel
-          </button>
         </form>
       )}
     </div>
