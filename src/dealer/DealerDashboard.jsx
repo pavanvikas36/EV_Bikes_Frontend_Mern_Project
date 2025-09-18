@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import Swal from "sweetalert2";
 import Profile from "../pages/Profile";
 import AddVehicle from "./AddVehicle";
 import { 
@@ -35,6 +36,46 @@ function DealerDashboard() {
     }
   }, [navigate, userRole]);
 
+  // Show success alert
+  const showSuccessAlert = (message) => {
+    Swal.fire({
+            title: "Success!",
+            text: message,
+            icon: "success",
+            background: "#000",
+            color: "#fff",
+            confirmButtonColor: "#f97316",
+            timer: 2000,
+            showConfirmButton: false,
+            timerProgressBar: true,
+          });
+  };
+
+  // Show error alert
+  const showErrorAlert = (message) => {
+    Swal.fire({
+      title: "Error!",
+      text: message,
+      icon: "error",
+      confirmButtonColor: "#f97316",
+    });
+  };
+
+  // Show confirmation dialog
+  const showConfirmationDialog = (title, text, confirmButtonText = "Yes") => {
+    return Swal.fire({
+      title: title,
+      text: text,
+      icon: "warning",
+      background: "#000",
+      color: "#fff",
+      showCancelButton: true,
+      confirmButtonColor: "#f97316",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: confirmButtonText,
+    });
+  };
+
   // Fetch dealer vehicles
   const fetchVehicles = async () => {
     try {
@@ -56,6 +97,7 @@ function DealerDashboard() {
     } catch (err) {
       console.error("Fetch vehicles error:", err);
       setVehicles([]);
+      showErrorAlert("Failed to fetch vehicles. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -68,18 +110,26 @@ function DealerDashboard() {
 
   // Delete vehicle
   const handleDeleteVehicle = async (vehicleId) => {
-    if (!window.confirm("Are you sure you want to delete this vehicle?")) return;
+    const result = await showConfirmationDialog(
+      "Are you sure?",
+      "You won't be able to recover this vehicle!",
+      "Yes, delete it!"
+    );
+    
+    if (!result.isConfirmed) return;
+    
     try {
       setLoading(true);
       const res = await axios.delete(
         `https://evbikesservermernproject-jenv.onrender.com/dealers/deleteVehicle/${vehicleId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert(res.data.message || "Vehicle deleted successfully!");
+      
+      showSuccessAlert(res.data.message || "Vehicle deleted successfully!");
       fetchVehicles();
     } catch (err) {
       console.error("Delete vehicle error:", err.response?.data || err.message);
-      alert(err.response?.data?.message || "Failed to delete vehicle");
+      showErrorAlert(err.response?.data?.message || "Failed to delete vehicle");
     } finally {
       setLoading(false);
     }
@@ -255,7 +305,7 @@ function DealerDashboard() {
         )}
 
         {/* Add Vehicle */}
-        {activeTab === "add" && <AddVehicle onVehicleAdded={fetchVehicles} />}
+        {activeTab === "add" && <AddVehicle onVehicleAdded={fetchVehicles} showSuccessAlert={showSuccessAlert} showErrorAlert={showErrorAlert} />}
 
         {/* Manage Vehicles */}
         {activeTab === "manage" && (
@@ -363,7 +413,7 @@ function DealerDashboard() {
         {activeTab === "profile" && (
           <div className="bg-white rounded-xl shadow-md p-6">
             <h1 className="text-2xl font-bold text-gray-800 mb-6">Your Profile</h1>
-            <Profile />
+            <Profile showSuccessAlert={showSuccessAlert} showErrorAlert={showErrorAlert} />
           </div>
         )}
       </main>
@@ -372,3 +422,190 @@ function DealerDashboard() {
 }
 
 export default DealerDashboard;
+
+
+
+
+
+// import { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+// import axios from "axios";
+// import Swal from "sweetalert2";
+// import Sidebar from "./Sidebar";
+// import DashboardOverview from "./DashboardOverview";
+// import ManageVehicles from "./ManageVehicles";
+// import Orders from "./Orders";
+// import Profile from "../pages/Profile";
+// import AddVehicle from "./AddVehicle";
+
+// function DealerDashboard() {
+//   const [activeTab, setActiveTab] = useState("overview");
+//   const [vehicles, setVehicles] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [stats, setStats] = useState({
+//     totalVehicles: 0,
+//     activeOrders: 0,
+//     earnings: 0
+//   });
+//   const navigate = useNavigate();
+//   const token = localStorage.getItem("token");
+//   const userRole = localStorage.getItem("role");
+
+//   // Redirect non-dealer users
+//   useEffect(() => {
+//     if (userRole !== "dealer") {
+//       navigate("/login", { replace: true });
+//     }
+//   }, [navigate, userRole]);
+
+//   // Show success alert
+//   const showSuccessAlert = (message) => {
+//     Swal.fire({
+//       title: "Success!",
+//       text: message,
+//       icon: "success",
+//       background: "#000",
+//       color: "#fff",
+//       confirmButtonColor: "#f97316",
+//       timer: 2000,
+//       showConfirmButton: false,
+//       timerProgressBar: true,
+//     });
+//   };
+
+//   // Show error alert
+//   const showErrorAlert = (message) => {
+//     Swal.fire({
+//       title: "Error!",
+//       text: message,
+//       icon: "error",
+//       confirmButtonColor: "#f97316",
+//     });
+//   };
+
+//   // Show confirmation dialog
+//   const showConfirmationDialog = (title, text, confirmButtonText = "Yes") => {
+//     return Swal.fire({
+//       title: title,
+//       text: text,
+//       icon: "warning",
+//       background: "#000",
+//       color: "#fff",
+//       showCancelButton: true,
+//       confirmButtonColor: "#f97316",
+//       cancelButtonColor: "#6b7280",
+//       confirmButtonText: confirmButtonText,
+//     });
+//   };
+
+//   // Fetch dealer vehicles
+//   const fetchVehicles = async () => {
+//     try {
+//       setLoading(true);
+//       const res = await axios.get(
+//         "https://evbikesservermernproject-jenv.onrender.com/dealers/getAllVehicles",
+//         { headers: { Authorization: `Bearer ${token}` } }
+//       );
+//       console.log("Vehicles response:", res.data);
+//       const vehiclesData = res.data.data || [];
+//       setVehicles(vehiclesData);
+      
+//       // Update stats
+//       setStats({
+//         totalVehicles: vehiclesData.length,
+//         activeOrders: Math.floor(Math.random() * 20) + 5, // Mock data
+//         earnings: vehiclesData.reduce((sum, vehicle) => sum + (vehicle.price || 0), 0) * 0.1 // 10% of total value
+//       });
+//     } catch (err) {
+//       console.error("Fetch vehicles error:", err);
+//       setVehicles([]);
+//       showErrorAlert("Failed to fetch vehicles. Please try again.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // Fetch vehicles on mount
+//   useEffect(() => {
+//     fetchVehicles();
+//   }, []);
+
+//   // Delete vehicle
+//   const handleDeleteVehicle = async (vehicleId) => {
+//     const result = await showConfirmationDialog(
+//       "Are you sure?",
+//       "You won't be able to recover this vehicle!",
+//       "Yes, delete it!"
+//     );
+    
+//     if (!result.isConfirmed) return;
+    
+//     try {
+//       setLoading(true);
+//       const res = await axios.delete(
+//         `https://evbikesservermernproject-jenv.onrender.com/dealers/deleteVehicle/${vehicleId}`,
+//         { headers: { Authorization: `Bearer ${token}` } }
+//       );
+      
+//       showSuccessAlert(res.data.message || "Vehicle deleted successfully!");
+//       fetchVehicles();
+//     } catch (err) {
+//       console.error("Delete vehicle error:", err.response?.data || err.message);
+//       showErrorAlert(err.response?.data?.message || "Failed to delete vehicle");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <div className="flex min-h-screen bg-gray-50">
+//       {/* Sidebar */}
+//       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      
+//       {/* Main Content */}
+//       <main className="flex-1 p-6 overflow-y-auto">
+//         {/* Dashboard Overview */}
+//         {activeTab === "overview" && (
+//           <DashboardOverview 
+//             stats={stats} 
+//             loading={loading} 
+//             vehicles={vehicles} 
+//             setActiveTab={setActiveTab} 
+//           />
+//         )}
+
+//         {/* Add Vehicle */}
+//         {activeTab === "add" && (
+//           <AddVehicle 
+//             onVehicleAdded={fetchVehicles} 
+//             showSuccessAlert={showSuccessAlert} 
+//             showErrorAlert={showErrorAlert} 
+//           />
+//         )}
+
+//         {/* Manage Vehicles */}
+//         {activeTab === "manage" && (
+//           <ManageVehicles 
+//             loading={loading} 
+//             vehicles={vehicles} 
+//             setActiveTab={setActiveTab} 
+//             handleDeleteVehicle={handleDeleteVehicle} 
+//           />
+//         )}
+
+//         {/* Orders */}
+//         {activeTab === "orders" && <Orders />}
+
+//         {/* Profile */}
+//         {activeTab === "profile" && (
+//           <div className="bg-white rounded-xl shadow-md p-6">
+//             <h1 className="text-2xl font-bold text-gray-800 mb-6">Your Profile</h1>
+//             <Profile showSuccessAlert={showSuccessAlert} showErrorAlert={showErrorAlert} />
+//           </div>
+//         )}
+//       </main>
+//     </div>
+//   );
+// }
+
+// export default DealerDashboard;
