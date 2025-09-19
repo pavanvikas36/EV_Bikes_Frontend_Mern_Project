@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Star, Heart, MapPin, ArrowLeft, Loader, X } from "lucide-react";
+import { Star, Heart, MapPin, ArrowLeft, Loader, X, Bookmark } from "lucide-react";
 
 function VehicleDetails() {
   const { vehicleId } = useParams();
@@ -12,6 +12,7 @@ function VehicleDetails() {
   const [error, setError] = useState("");
   const [currentImg, setCurrentImg] = useState(0);
   const [isWishlist, setIsWishlist] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
   const [showContactPopup, setShowContactPopup] = useState(false);
 
   useEffect(() => {
@@ -29,6 +30,9 @@ function VehicleDetails() {
 
         setVehicle(res.data.data);
         setCurrentImg(0);
+        
+        // Check if vehicle is in wishlist
+        checkWishlistStatus(token);
       } catch (err) {
         console.error("Vehicle fetch error:", err.response || err.message);
         setError(err.response?.data?.message || "Failed to load vehicle");
@@ -37,11 +41,80 @@ function VehicleDetails() {
       }
     };
 
+    const checkWishlistStatus = async (token) => {
+      try {
+        const wishlistRes = await axios.get(
+          `https://evbikesservermernproject-jenv.onrender.com/buyer/wishlist`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        
+        // Check if current vehicle is in wishlist
+        const inWishlist = wishlistRes.data.data.some(item => item.vehicleId._id === vehicleId);
+        setIsWishlist(inWishlist);
+      } catch (err) {
+        console.error("Wishlist check error:", err);
+      }
+    };
+
     fetchVehicle();
   }, [vehicleId]);
 
-  const toggleWishlist = () => {
-    setIsWishlist(!isWishlist);
+  const toggleWishlist = async () => {
+    try {
+      setWishlistLoading(true);
+      const token = localStorage.getItem("token");
+      
+      if (isWishlist) {
+        // Remove from wishlist
+        await axios.delete(
+          `https://evbikesservermernproject-jenv.onrender.com/buyer/wishlist/remove/${vehicleId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setIsWishlist(false);
+      } else {
+        // Add to wishlist
+        await axios.post(
+          `https://evbikesservermernproject-jenv.onrender.com/buyer/addToWishlist/${vehicleId}`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setIsWishlist(true);
+      }
+    } catch (err) {
+      console.error("Wishlist toggle error:", err);
+      alert(err.response?.data?.message || "Failed to update wishlist");
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
+
+  const handleBookVehicle = async () => {
+    // try {
+    //   const token = localStorage.getItem("token");
+    //   const res = await axios.post(
+    //     `https://evbikesservermernproject-jenv.onrender.com/buyer/bookings/book/${vehicleId}`,
+    //     {},
+    //     {
+    //       headers: {
+    //         Authorization: `Bearer ${token}`,
+    //       },
+    //     }
+    //   );
+      
+    //   alert("Vehicle booked successfully!");
+    //   navigate("/buyer/bookings");
+    // } catch (err) {
+    //   console.error("Booking error:", err);
+    //   alert(err.response?.data?.message || "Failed to book vehicle");
+    // }
   };
 
   const formatPrice = (price) => {
@@ -117,12 +190,17 @@ function VehicleDetails() {
                   {/* Wishlist Button */}
                   <button
                     onClick={toggleWishlist}
+                    disabled={wishlistLoading}
                     className="absolute top-4 right-4 p-2 bg-white rounded-full border border-gray-300 hover:bg-gray-100 transition-colors"
                   >
-                    <Heart 
-                      size={20} 
-                      className={isWishlist ? "fill-black text-black" : "text-black"} 
-                    />
+                    {wishlistLoading ? (
+                      <Loader className="animate-spin h-5 w-5 text-black" />
+                    ) : (
+                      <Heart 
+                        size={20} 
+                        className={isWishlist ? "fill-red-500 text-red-500" : "text-black"} 
+                      />
+                    )}
                   </button>
                   
                   {/* Navigation Arrows */}
@@ -170,6 +248,17 @@ function VehicleDetails() {
                 <span className="text-gray-500">No Images Available</span>
               </div>
             )}
+            
+            {/* Book Button */}
+            <div className="mt-6">
+              <button
+                onClick={handleBookVehicle}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <Bookmark size={20} />
+                Book This Vehicle
+              </button>
+            </div>
           </div>
 
           {/* Vehicle Details */}
