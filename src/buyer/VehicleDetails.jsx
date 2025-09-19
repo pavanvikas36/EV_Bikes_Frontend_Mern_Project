@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Star, Heart, MapPin, ArrowLeft, Loader } from "lucide-react";
+import { Star, Heart, MapPin, ArrowLeft, Loader, X } from "lucide-react";
 
 function VehicleDetails() {
   const { vehicleId } = useParams();
@@ -12,6 +12,7 @@ function VehicleDetails() {
   const [error, setError] = useState("");
   const [currentImg, setCurrentImg] = useState(0);
   const [isWishlist, setIsWishlist] = useState(false);
+  const [showContactPopup, setShowContactPopup] = useState(false);
 
   useEffect(() => {
     const fetchVehicle = async () => {
@@ -179,19 +180,19 @@ function VehicleDetails() {
                   {vehicle.brand} {vehicle.model}
                 </h1>
                 <p className="text-sm text-black mt-1 flex items-center">
-                  <MapPin size={14} className="mr-1" />
-                  {vehicle.location || "Available nationwide"}
+                  {/* <MapPin size={14} className="mr-1" /> */}
+                  {/* {vehicle.location || "Available nationwide"} */}
                 </p>
               </div>
               <div className="flex items-center">
-                <Star size={16} className="text-black fill-current" />
-                <span className="ml-1 text-sm font-medium text-black">4.5</span>
+                {/* <Star size={16} className="text-black fill-current" />
+                <span className="ml-1 text-sm font-medium text-black">4.5</span> */}
               </div>
             </div>
 
             <div className="mb-6">
               <p className="text-3xl font-bold text-black">₹{formatPrice(vehicle.price)}</p>
-              <p className="text-sm text-black">ex-showroom</p>
+              {/* <p className="text-sm text-black">ex-showroom</p> */}
             </div>
 
             <div className="mb-6">
@@ -218,24 +219,6 @@ function VehicleDetails() {
               </div>
             </div>
 
-            {/* Additional Information */}
-            <div className="border-t border-gray-300 pt-4">
-              <h3 className="font-semibold text-black mb-2">Additional Information</h3>
-              <div className="text-sm text-black space-y-1">
-                {vehicle.createdAt && (
-                  <p>
-                    <span className="font-medium">Uploaded:</span>{" "}
-                    {new Date(vehicle.createdAt).toLocaleDateString()}
-                  </p>
-                )}
-                {vehicle.dealerId && (
-                  <p>
-                    <span className="font-medium">Dealer ID:</span> {vehicle.dealerId}
-                  </p>
-                )}
-              </div>
-            </div>
-
             <div className="mt-8 flex gap-4">
               <button
                 onClick={() => navigate("/buyer/all-vehicles")}
@@ -244,7 +227,7 @@ function VehicleDetails() {
                 Back to Vehicles
               </button>
               <button
-                onClick={() => alert("Contact dealer functionality would go here")}
+                onClick={() => setShowContactPopup(true)}
                 className="flex-1 px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
               >
                 Contact Dealer
@@ -253,6 +236,48 @@ function VehicleDetails() {
           </div>
         </div>
       </div>
+
+      {/* Contact Dealer Popup */}
+      {showContactPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-black">Contact Dealer</h3>
+              <button 
+                onClick={() => setShowContactPopup(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-600">Dealer Name</p>
+                <p className="text-lg font-medium text-black">{vehicle.dealerName || "Not available"}</p>
+              </div>
+              
+              <div>
+                <p className="text-sm text-gray-600">Dealer Email</p>
+                <p className="text-lg font-medium text-black">{vehicle.dealerEmail || "Not available"}</p>
+              </div>
+              
+              <div className="pt-4">
+                <p className="text-sm text-gray-600">You can contact the dealer directly using the information above.</p>
+              </div>
+            </div>
+            
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowContactPopup(false)}
+                className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
