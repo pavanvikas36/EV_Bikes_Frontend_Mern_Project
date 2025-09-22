@@ -6,8 +6,9 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Profile from "./pages/Profile";
 import DealerDashboard from "./dealer/DealerDashboard";
-import AllVehicles from "./buyer/AllVehicles"; // ✅ Buyer AllVehicles
-import VehicleDetails from "./buyer/VehicleDetails"; // ✅ Buyer VehicleDetails
+import AllVehicles from "./buyer/AllVehicles";
+import VehicleDetails from "./buyer/VehicleDetails";
+import Wishlist from "./components/Wishlist"; // Import the Wishlist component
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -53,7 +54,19 @@ function App() {
 
         {/* Buyer Vehicles */}
         <Route path="/buyer/all-vehicles" element={<AllVehicles />} />
-        <Route path="/buyer/vehicle/:vehicleId" element={<VehicleDetails />} /> {/* ✅ New Details Page */}
+        <Route path="/buyer/vehicle/:vehicleId" element={<VehicleDetails />} />
+        
+        {/* Wishlist */}
+        <Route path="/wishlist" element={<Wishlist />} />
+
+        {/* Additional routes you might want to add */}
+        <Route path="/ev-bikes" element={<AllVehicles category="EV Bikes" />} />
+        <Route path="/scooties" element={<AllVehicles category="Scooties" />} />
+        <Route path="/about" element={<div className="min-h-screen flex items-center justify-center"><h1 className="text-3xl font-bold">About Page</h1></div>} />
+        <Route path="/contact" element={<div className="min-h-screen flex items-center justify-center"><h1 className="text-3xl font-bold">Contact Page</h1></div>} />
+        
+        {/* 404 Page */}
+        <Route path="*" element={<div className="min-h-screen flex items-center justify-center"><h1 className="text-3xl font-bold">404 - Page Not Found</h1></div>} />
       </Routes>
     </div>
   );

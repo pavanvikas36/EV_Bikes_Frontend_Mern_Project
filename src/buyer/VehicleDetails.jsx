@@ -12,6 +12,7 @@ function VehicleDetails() {
   const [error, setError] = useState("");
   const [currentImg, setCurrentImg] = useState(0);
   const [isWishlist, setIsWishlist] = useState(false);
+  const [wishlistId, setWishlistId] = useState(null);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [showContactPopup, setShowContactPopup] = useState(false);
 
@@ -30,7 +31,7 @@ function VehicleDetails() {
 
         setVehicle(res.data.data);
         setCurrentImg(0);
-        
+
         // Check if vehicle is in wishlist
         checkWishlistStatus(token);
       } catch (err) {
@@ -44,17 +45,20 @@ function VehicleDetails() {
     const checkWishlistStatus = async (token) => {
       try {
         const wishlistRes = await axios.get(
-          `https://evbikesservermernproject-jenv.onrender.com/buyer/wishlist`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          "https://evbikesservermernproject-jenv.onrender.com/buyer/viewAllWishlist",
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        
-        // Check if current vehicle is in wishlist
-        const inWishlist = wishlistRes.data.data.some(item => item.vehicleId._id === vehicleId);
-        setIsWishlist(inWishlist);
+
+        const foundItem = wishlistRes.data.data.find(
+          (item) => item.vehicleId._id === vehicleId
+        );
+        if (foundItem) {
+          setIsWishlist(true);
+          setWishlistId(foundItem._id);
+        } else {
+          setIsWishlist(false);
+          setWishlistId(null);
+        }
       } catch (err) {
         console.error("Wishlist check error:", err);
       }
@@ -67,26 +71,24 @@ function VehicleDetails() {
     try {
       setWishlistLoading(true);
       const token = localStorage.getItem("token");
-      
+
       if (isWishlist) {
-        // Remove from wishlist
+        // Remove from wishlist (needs wishlistId)
         await axios.delete(
-          `https://evbikesservermernproject-jenv.onrender.com/buyer/wishlist/remove/${vehicleId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          `https://evbikesservermernproject-jenv.onrender.com/buyer/deleteWishlist/${wishlistId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setIsWishlist(false);
+        setWishlistId(null);
       } else {
         // Add to wishlist
-        await axios.post(
+        const res = await axios.post(
           `https://evbikesservermernproject-jenv.onrender.com/buyer/addToWishlist/${vehicleId}`,
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setIsWishlist(true);
+        setWishlistId(res.data.data?._id || null);
       }
     } catch (err) {
       console.error("Wishlist toggle error:", err);
@@ -97,57 +99,42 @@ function VehicleDetails() {
   };
 
   const handleBookVehicle = async () => {
-    // try {
-    //   const token = localStorage.getItem("token");
-    //   const res = await axios.post(
-    //     `https://evbikesservermernproject-jenv.onrender.com/buyer/bookings/book/${vehicleId}`,
-    //     {},
-    //     {
-    //       headers: {
-    //         Authorization: `Bearer ${token}`,
-    //       },
-    //     }
-    //   );
-      
-    //   alert("Vehicle booked successfully!");
-    //   navigate("/buyer/bookings");
-    // } catch (err) {
-    //   console.error("Booking error:", err);
-    //   alert(err.response?.data?.message || "Failed to book vehicle");
-    // }
+    // Implement booking functionality here if needed
   };
 
   const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-IN', {
-      maximumFractionDigits: 0
+    return new Intl.NumberFormat("en-IN", {
+      maximumFractionDigits: 0,
     }).format(price);
   };
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="text-center">
-        <Loader className="animate-spin mx-auto h-12 w-12 text-white" />
-        <p className="mt-4 text-lg text-white">Loading vehicle details...</p>
-      </div>
-    </div>
-  );
-
-  if (error) return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="text-center">
-        <div className="bg-white p-6 rounded-lg max-w-md">
-          <h2 className="text-xl font-semibold text-black">Error</h2>
-          <p className="mt-2 text-black">{error}</p>
-          <button 
-            onClick={() => navigate("/buyer/all-vehicles")} 
-            className="mt-4 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
-          >
-            Back to Vehicles
-          </button>
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-center">
+          <Loader className="animate-spin mx-auto h-12 w-12 text-white" />
+          <p className="mt-4 text-lg text-white">Loading vehicle details...</p>
         </div>
       </div>
-    </div>
-  );
+    );
+
+  if (error)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-center">
+          <div className="bg-white p-6 rounded-lg max-w-md">
+            <h2 className="text-xl font-semibold text-black">Error</h2>
+            <p className="mt-2 text-black">{error}</p>
+            <button
+              onClick={() => navigate("/buyer/all-vehicles")}
+              className="mt-4 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
+            >
+              Back to Vehicles
+            </button>
+          </div>
+        </div>
+      </div>
+    );
 
   if (!vehicle) return null;
 
@@ -170,7 +157,9 @@ function VehicleDetails() {
             Back
           </button>
           <h1 className="text-3xl font-bold text-white">Vehicle Details</h1>
-          <p className="mt-2 text-white">Explore all specifications and features</p>
+          <p className="mt-2 text-white">
+            Explore all specifications and features
+          </p>
         </div>
       </div>
 
@@ -186,7 +175,7 @@ function VehicleDetails() {
                     alt={vehicle.model}
                     className="object-contain w-full h-full p-4"
                   />
-                  
+
                   {/* Wishlist Button */}
                   <button
                     onClick={toggleWishlist}
@@ -196,13 +185,17 @@ function VehicleDetails() {
                     {wishlistLoading ? (
                       <Loader className="animate-spin h-5 w-5 text-black" />
                     ) : (
-                      <Heart 
-                        size={20} 
-                        className={isWishlist ? "fill-red-500 text-red-500" : "text-black"} 
+                      <Heart
+                        size={20}
+                        className={
+                          isWishlist
+                            ? "fill-red-500 text-red-500"
+                            : "text-black"
+                        }
                       />
                     )}
                   </button>
-                  
+
                   {/* Navigation Arrows */}
                   {total > 1 && (
                     <>
@@ -230,7 +223,9 @@ function VehicleDetails() {
                         key={index}
                         onClick={() => setCurrentImg(index)}
                         className={`flex-shrink-0 w-20 h-20 border-2 rounded-lg overflow-hidden ${
-                          currentImg === index ? "border-black" : "border-gray-300"
+                          currentImg === index
+                            ? "border-black"
+                            : "border-gray-300"
                         }`}
                       >
                         <img
@@ -248,7 +243,7 @@ function VehicleDetails() {
                 <span className="text-gray-500">No Images Available</span>
               </div>
             )}
-            
+
             {/* Book Button */}
             <div className="mt-6">
               <button
@@ -268,43 +263,46 @@ function VehicleDetails() {
                 <h1 className="text-2xl font-bold text-black">
                   {vehicle.brand} {vehicle.model}
                 </h1>
-                <p className="text-sm text-black mt-1 flex items-center">
-                  {/* <MapPin size={14} className="mr-1" /> */}
-                  {/* {vehicle.location || "Available nationwide"} */}
-                </p>
-              </div>
-              <div className="flex items-center">
-                {/* <Star size={16} className="text-black fill-current" />
-                <span className="ml-1 text-sm font-medium text-black">4.5</span> */}
               </div>
             </div>
 
             <div className="mb-6">
-              <p className="text-3xl font-bold text-black">₹{formatPrice(vehicle.price)}</p>
-              {/* <p className="text-sm text-black">ex-showroom</p> */}
+              <p className="text-3xl font-bold text-black">
+                ₹{formatPrice(vehicle.price)}
+              </p>
             </div>
 
             <div className="mb-6">
               <h3 className="font-semibold text-black mb-2">Description</h3>
-              <p className="text-black">{vehicle.description || "No description available."}</p>
+              <p className="text-black">
+                {vehicle.description || "No description available."}
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="bg-gray-50 p-3 rounded-lg">
                 <p className="text-sm text-black">Type</p>
-                <p className="font-medium text-black">{vehicle.type || "E-Bike"}</p>
+                <p className="font-medium text-black">
+                  {vehicle.type || "E-Bike"}
+                </p>
               </div>
               <div className="bg-gray-50 p-3 rounded-lg">
                 <p className="text-sm text-black">Fuel Type</p>
-                <p className="font-medium text-black">{vehicle.fuelType || "Electric"}</p>
+                <p className="font-medium text-black">
+                  {vehicle.fuelType || "Electric"}
+                </p>
               </div>
               <div className="bg-gray-50 p-3 rounded-lg">
                 <p className="text-sm text-black">Transmission</p>
-                <p className="font-medium text-black">{vehicle.transmission || "Automatic"}</p>
+                <p className="font-medium text-black">
+                  {vehicle.transmission || "Automatic"}
+                </p>
               </div>
               <div className="bg-gray-50 p-3 rounded-lg">
                 <p className="text-sm text-black">Range</p>
-                <p className="font-medium text-black">{vehicle.range || "80 km"}</p>
+                <p className="font-medium text-black">
+                  {vehicle.range || "80 km"}
+                </p>
               </div>
             </div>
 
@@ -332,30 +330,37 @@ function VehicleDetails() {
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-black">Contact Dealer</h3>
-              <button 
+              <button
                 onClick={() => setShowContactPopup(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <X size={24} />
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-gray-600">Dealer Name</p>
-                <p className="text-lg font-medium text-black">{vehicle.dealerName || "Not available"}</p>
+                <p className="text-lg font-medium text-black">
+                  {vehicle.dealerName || "Not available"}
+                </p>
               </div>
-              
+
               <div>
                 <p className="text-sm text-gray-600">Dealer Email</p>
-                <p className="text-lg font-medium text-black">{vehicle.dealerEmail || "Not available"}</p>
+                <p className="text-lg font-medium text-black">
+                  {vehicle.dealerEmail || "Not available"}
+                </p>
               </div>
-              
+
               <div className="pt-4">
-                <p className="text-sm text-gray-600">You can contact the dealer directly using the information above.</p>
+                <p className="text-sm text-gray-600">
+                  You can contact the dealer directly using the information
+                  above.
+                </p>
               </div>
             </div>
-            
+
             <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setShowContactPopup(false)}

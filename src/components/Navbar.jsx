@@ -8,6 +8,7 @@ function Navbar({ isLoggedIn, userRole }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [scrolled, setScrolled] = useState(false);
+  const [wishlistCount, setWishlistCount] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null);
@@ -33,6 +34,44 @@ function Navbar({ isLoggedIn, userRole }) {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Fetch wishlist count and listen for updates
+  useEffect(() => {
+    if (isLoggedIn && userRole === "buyer") {
+      fetchWishlistCount();
+      
+      // Listen for wishlist update events
+      const handleWishlistUpdate = () => {
+        fetchWishlistCount();
+      };
+      
+      window.addEventListener("wishlistUpdated", handleWishlistUpdate);
+      return () => window.removeEventListener("wishlistUpdated", handleWishlistUpdate);
+    }
+  }, [isLoggedIn, userRole]);
+
+  const fetchWishlistCount = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await fetch(
+        "https://evbikesservermernproject-jenv.onrender.com/buyer/viewAllWishlist",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setWishlistCount(data.wishlistItems?.length || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching wishlist count:", error);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -72,7 +111,6 @@ function Navbar({ isLoggedIn, userRole }) {
             alt="RevVolt Logo"
             className="h-14 md:h-16 w-auto object-contain"
           />
-          {/* <span className="text-xl font-bold text-white hidden sm:block">RevVolt</span> */}
         </div>
 
         {/* Desktop Menu */}
@@ -118,16 +156,20 @@ function Navbar({ isLoggedIn, userRole }) {
 
           {isLoggedIn ? (
             <div className="flex items-center gap-3 md:gap-4">
-              <button 
-                onClick={() => navigate("/wishlist")}
-                className="p-1.5 rounded-full hover:bg-gray-800 transition-colors relative group"
-                aria-label="Wishlist"
-              >
-                <Heart className="text-white group-hover:text-orange-500" size={22} />
-                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                  3
-                </span>
-              </button>
+              {userRole === "buyer" && (
+                <button 
+                  onClick={() => navigate("/wishlist")}
+                  className="p-1.5 rounded-full hover:bg-gray-800 transition-colors relative group"
+                  aria-label="Wishlist"
+                >
+                  <Heart className="text-white group-hover:text-orange-500" size={22} />
+                  {wishlistCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                      {wishlistCount}
+                    </span>
+                  )}
+                </button>
+              )}
 
               {/* User dropdown */}
               <div className="relative" ref={dropdownRef}>
