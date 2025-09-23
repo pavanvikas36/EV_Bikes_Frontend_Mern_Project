@@ -343,7 +343,7 @@ function VehicleDetails() {
               >
                 Close
               </button>
-              <button
+              {/* <button
                 onClick={() => {
                   // Implement contact action
                   alert("Contact functionality to be implemented");
@@ -351,7 +351,7 @@ function VehicleDetails() {
                 className="px-4 py-2 bg-black text-white rounded-md hover:bg-orange-500 transition-colors"
               >
                 Send Message
-              </button>
+              </button> */}
             </div>
           </div>
         </div>
