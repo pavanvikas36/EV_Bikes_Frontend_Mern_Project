@@ -194,13 +194,13 @@ function Profile() {
             </div>
           </div>
 
-          <button
+          {/* <button
             onClick={() => setEditMode(true)}
             className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition font-medium shadow-md hover:shadow-lg"
             disabled={loading}
           >
             {loading ? "Loading..." : "Edit Profile"}
-          </button>
+          </button> */}
         </div>
       ) : (
         <form className="space-y-6" onSubmit={handleSubmit}>
