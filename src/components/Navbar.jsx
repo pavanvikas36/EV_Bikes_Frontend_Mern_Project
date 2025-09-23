@@ -92,7 +92,7 @@ function Navbar({ isLoggedIn, userRole }) {
   const menuItems = [
     { name: "Home", path: "/" },
     { name: "All Vehicles", path: "/buyer/all-vehicles" },
-    { name: "EV Bikes", path: "/ev-bikes" },
+    // { name: "EV Bikes", path: "/ev-bikes" },
     { name: "Scooties", path: "/scooties" },
     { name: "About", path: "/about" },
     { name: "Contact", path: "/contact" },
@@ -162,7 +162,7 @@ function Navbar({ isLoggedIn, userRole }) {
                   className="p-1.5 rounded-full hover:bg-gray-800 transition-colors relative group"
                   aria-label="Wishlist"
                 >
-                  <Heart className="text-white group-hover:text-orange-500" size={22} />
+                  {/* <Heart className="text-white group-hover:text-orange-500" size={22} /> */}
                   {wishlistCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
                       {wishlistCount}
