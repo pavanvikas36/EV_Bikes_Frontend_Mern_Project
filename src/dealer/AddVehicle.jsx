@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 
-function EditVehicleModal({ isOpen, onClose, vehicle, onUpdated }) {
+function AddVehicle({ onVehicleAdded }) {
   const [formData, setFormData] = useState({
     brand: "",
     model: "",
@@ -10,62 +10,84 @@ function EditVehicleModal({ isOpen, onClose, vehicle, onUpdated }) {
     fuelType: "Petrol",
     transmission: "Manual",
     description: "",
+    images: [],
   });
-
   const [loading, setLoading] = useState(false);
+  const [, setSuccessMessage] = useState("");
+
   const token = localStorage.getItem("token");
 
-  // Prefill form
-  useEffect(() => {
-    if (vehicle) {
-      setFormData({
-        brand: vehicle.brand || "",
-        model: vehicle.model || "",
-        price: vehicle.price || "",
-        fuelType: vehicle.fuelType || "Petrol",
-        transmission: vehicle.transmission || "Manual",
-        description: vehicle.description || "",
-      });
-    }
-  }, [vehicle]);
-
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, files } = e.target;
+    if (files) {
+      setFormData({ ...formData, images: Array.from(files) });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
-  const handleUpdate = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
+      setSuccessMessage("");
 
-      await axios.put(
-        `https://evbikesservermernproject-jenv.onrender.com/dealers/updateVehicle/${vehicle._id}`,
-        formData,
+      const data = new FormData();
+      data.append("brand", formData.brand);
+      data.append("model", formData.model);
+      data.append("price", formData.price);
+      data.append("fuelType", formData.fuelType);
+      data.append("transmission", formData.transmission);
+      data.append("description", formData.description);
+
+      formData.images.forEach((img) => {
+        data.append("images", img);
+      });
+
+      console.log("Submitting vehicle:", formData);
+
+      const res = await axios.post(
+        "https://evbikesservermernproject-jenv.onrender.com/dealers/vehicles",
+        data,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            "Content-Type": "multipart/form-data",
           },
         }
       );
 
+      console.log("Response:", res.data);
+
       Swal.fire({
-        title: "Updated!",
-        text: "Vehicle updated successfully",
+        title: "Success!",
+        text: "Vehicle added successfully!",
         icon: "success",
         background: "#000",
         color: "#fff",
         confirmButtonColor: "#f97316",
         timer: 2000,
         showConfirmButton: false,
+        timerProgressBar: true,
       });
 
-      onUpdated();
-      onClose();
-    } catch (err) {
+      setFormData({
+        brand: "",
+        model: "",
+        price: "",
+        fuelType: "Petrol",
+        transmission: "Manual",
+        description: "",
+        images: [],
+      });
+
+      if (onVehicleAdded) onVehicleAdded();
+    } catch (error) {
+      console.error("Add vehicle error:", error.response?.data || error.message);
+
       Swal.fire({
         title: "Error",
-        text: err.response?.data?.message || "Update failed",
+        text: error.response?.data?.message || "Failed to add vehicle",
         icon: "error",
         background: "#000",
         color: "#fff",
@@ -76,25 +98,21 @@ function EditVehicleModal({ isOpen, onClose, vehicle, onUpdated }) {
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="max-w-2xl w-full bg-black p-8 rounded-xl shadow-2xl border border-orange-500/30 relative">
-        
-        {/* Header */}
+    <div className="max-w-2xl mx-auto bg-black p-8 rounded-xl shadow-2xl border border-orange-500/30 relative overflow-hidden">
+      <div className="absolute -top-12 -right-12 w-24 h-24 bg-orange-500/10 rounded-full"></div>
+      <div className="absolute -bottom-8 -left-8 w-20 h-20 bg-orange-500/5 rounded-full"></div>
+
+      <div className="relative z-10">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-orange-500 mb-2">
-            Edit Vehicle
+            Add New Vehicle
           </h2>
-          <p className="text-white/70">
-            Update your vehicle information
-          </p>
+          <p className="text-white/70">List a new vehicle in your inventory</p>
         </div>
 
-        <form className="space-y-6" onSubmit={handleUpdate}>
+        <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Brand */}
             <div>
               <label className="block text-white text-sm font-medium mb-2">
                 Brand *
@@ -102,14 +120,14 @@ function EditVehicleModal({ isOpen, onClose, vehicle, onUpdated }) {
               <input
                 type="text"
                 name="brand"
+                placeholder="e.g., Tesla, Honda, Toyota"
                 value={formData.brand}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white"
               />
             </div>
 
-            {/* Model */}
             <div>
               <label className="block text-white text-sm font-medium mb-2">
                 Model *
@@ -117,31 +135,31 @@ function EditVehicleModal({ isOpen, onClose, vehicle, onUpdated }) {
               <input
                 type="text"
                 name="model"
+                placeholder="e.g., Model 3, Civic, Camry"
                 value={formData.model}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white"
               />
             </div>
           </div>
 
-          {/* Price */}
           <div>
             <label className="block text-white text-sm font-medium mb-2">
-              Price *
+              Price ($) *
             </label>
             <input
               type="number"
               name="price"
+              placeholder="Enter price"
               value={formData.price}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Fuel */}
             <div>
               <label className="block text-white text-sm font-medium mb-2">
                 Fuel Type *
@@ -150,7 +168,7 @@ function EditVehicleModal({ isOpen, onClose, vehicle, onUpdated }) {
                 name="fuelType"
                 value={formData.fuelType}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white"
               >
                 <option>Petrol</option>
                 <option>Diesel</option>
@@ -159,7 +177,6 @@ function EditVehicleModal({ isOpen, onClose, vehicle, onUpdated }) {
               </select>
             </div>
 
-            {/* Transmission */}
             <div>
               <label className="block text-white text-sm font-medium mb-2">
                 Transmission *
@@ -168,7 +185,7 @@ function EditVehicleModal({ isOpen, onClose, vehicle, onUpdated }) {
                 name="transmission"
                 value={formData.transmission}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white"
               >
                 <option>Manual</option>
                 <option>Automatic</option>
@@ -176,7 +193,6 @@ function EditVehicleModal({ isOpen, onClose, vehicle, onUpdated }) {
             </div>
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-white text-sm font-medium mb-2">
               Description *
@@ -187,32 +203,36 @@ function EditVehicleModal({ isOpen, onClose, vehicle, onUpdated }) {
               value={formData.description}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white resize-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white resize-none"
             />
           </div>
 
-          {/* Buttons */}
-          <div className="flex justify-end gap-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
-            >
-              Cancel
-            </button>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-3 bg-orange-500 text-black rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50"
-            >
-              {loading ? "Updating..." : "Update Vehicle"}
-            </button>
+          <div>
+            <label className="block text-white text-sm font-medium mb-2">
+              Images *
+            </label>
+            <input
+              type="file"
+              name="images"
+              accept="image/*"
+              multiple
+              onChange={handleChange}
+              required
+              className="text-white"
+            />
           </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-orange-500 text-black py-3 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50"
+          >
+            {loading ? "Adding Vehicle..." : "Add Vehicle"}
+          </button>
         </form>
       </div>
     </div>
   );
 }
 
-export default EditVehicleModal;
+export default AddVehicle;
