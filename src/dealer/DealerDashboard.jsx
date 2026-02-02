@@ -26,8 +26,8 @@ function DealerDashboard() {
     activeOrders: 0,
     earnings: 0
   });
+  const [editVehicle, setEditVehicle] = useState(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const userRole = localStorage.getItem("role");
@@ -136,12 +136,6 @@ function DealerDashboard() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // ✅ WRITE EDIT HANDLER HERE ⬇️
-  const handleEditVehicle = (vehicle) => {
-    setSelectedVehicle(vehicle);
-    setIsEditOpen(true);
   };
 
   const menuItems = [
@@ -385,7 +379,10 @@ function DealerDashboard() {
                           View
                         </button>
                         <button
-                          onClick={() => handleEditVehicle(v)}
+                          onClick={() => {
+                            setEditVehicle(v);
+                            setIsEditOpen(true);
+                          }}
                           className="flex-1 bg-blue-100 text-blue-700 py-2 rounded-lg text-sm hover:bg-blue-200 transition flex items-center justify-center gap-1"
                         >
                           <Edit size={16} />
@@ -432,7 +429,7 @@ function DealerDashboard() {
       <EditVehicleModal
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
-        vehicle={selectedVehicle}
+        vehicle={editVehicle}
         onUpdated={fetchVehicles}
       />
     </div>
