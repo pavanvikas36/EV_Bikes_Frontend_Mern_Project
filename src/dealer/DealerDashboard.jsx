@@ -15,6 +15,7 @@ import {
   Edit,
   Eye
 } from "lucide-react";
+import EditVehicleModal from "./EditVehicleModal";
 
 function DealerDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -25,6 +26,8 @@ function DealerDashboard() {
     activeOrders: 0,
     earnings: 0
   });
+  const [editVehicle, setEditVehicle] = useState(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const userRole = localStorage.getItem("role");
@@ -375,10 +378,17 @@ function DealerDashboard() {
                           <Eye size={16} />
                           View
                         </button>
-                        <button className="flex-1 bg-blue-100 text-blue-700 py-2 rounded-lg text-sm hover:bg-blue-200 transition flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => {
+                            setEditVehicle(v);
+                            setIsEditOpen(true);
+                          }}
+                          className="flex-1 bg-blue-100 text-blue-700 py-2 rounded-lg text-sm hover:bg-blue-200 transition flex items-center justify-center gap-1"
+                        >
                           <Edit size={16} />
                           Edit
                         </button>
+
                         <button 
                           onClick={() => handleDeleteVehicle(v._id)}
                           className="flex-1 bg-red-100 text-red-700 py-2 rounded-lg text-sm hover:bg-red-200 transition flex items-center justify-center gap-1"
@@ -417,6 +427,12 @@ function DealerDashboard() {
           </div>
         )}
       </main>
+      <EditVehicleModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        vehicle={editVehicle}
+        onUpdated={fetchVehicles}
+      />
     </div>
   );
 }
