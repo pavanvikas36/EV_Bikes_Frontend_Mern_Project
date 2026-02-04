@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Star, MapPin, ArrowLeft, Loader, X, Phone, Mail, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  X,
+  Phone,
+  Mail,
+} from "lucide-react";
 
 function VehicleDetails() {
   const { vehicleId } = useParams();
@@ -9,355 +18,235 @@ function VehicleDetails() {
 
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [currentImg, setCurrentImg] = useState(0);
   const [showContactPopup, setShowContactPopup] = useState(false);
 
   const API_BASE_URL = "https://evbikesservermernproject-jenv.onrender.com";
 
   useEffect(() => {
-    const fetchVehicleAndWishlist = async () => {
+    const fetchVehicle = async () => {
       try {
-        setLoading(true);
         const token = localStorage.getItem("token");
-        
-        if (!token) {
-          setError("Authentication required");
-          setLoading(false);
-          return;
-        }
-
-        const vehicleRes = await axios.get(
+        const res = await axios.get(
           `${API_BASE_URL}/buyer/viewVehicles/${vehicleId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-
-        setVehicle(vehicleRes.data.data);
+        setVehicle(res.data.data);
       } catch (err) {
-        console.error("Vehicle fetch error:", err);
-        setError(err.response?.data?.message || "Failed to load vehicle details");
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchVehicleAndWishlist();
+    fetchVehicle();
   }, [vehicleId]);
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("en-IN", {
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-center">
-          <Loader className="animate-spin mx-auto h-12 w-12 text-orange-500" />
-          <p className="mt-4 text-lg text-white">Loading vehicle details...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-center bg-white p-8 rounded-lg max-w-md border border-gray-300">
-          <h2 className="text-xl font-semibold text-black mb-2">Error</h2>
-          <p className="text-black mb-4">{error}</p>
-          <button
-            onClick={() => navigate("/buyer/all-vehicles")}
-            className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            Back to Vehicles
-          </button>
-        </div>
+        <Loader className="animate-spin h-10 w-10 text-orange-500" />
       </div>
     );
   }
 
   if (!vehicle) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-center">
-          <p className="text-lg text-white">Vehicle not found</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        Vehicle not found
       </div>
     );
   }
 
-  const images = Array.isArray(vehicle.images) ? vehicle.images : [];
+  const images = vehicle.images || [];
   const totalImages = images.length;
 
-  const goPrev = () => setCurrentImg((prev) => (prev - 1 + totalImages) % totalImages);
-  const goNext = () => setCurrentImg((prev) => (prev + 1) % totalImages);
+  const goPrev = () =>
+    setCurrentImg((p) => (p - 1 + totalImages) % totalImages);
+  const goNext = () =>
+    setCurrentImg((p) => (p + 1) % totalImages);
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header - Matching AllVehicles header */}
-      <div className="bg-black shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center space-x-4">
+    <div className="bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="bg-black text-white py-5">
+        <div className="max-w-7xl mx-auto px-6 flex items-center gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center hover:text-orange-500"
+          >
+            <ArrowLeft size={18} className="mr-2" />
+            Back
+          </button>
+          <h1 className="text-xl font-semibold">Vehicle Details</h1>
+        </div>
+      </div>
+
+      {/* IMAGE SECTION (TOP) */}
+      <div className="max-w-7xl mx-auto px-6 mt-8">
+        <div className="relative h-[420px] bg-white rounded-2xl shadow overflow-hidden">
+          <img
+            src={images[currentImg]?.url}
+            alt="Vehicle"
+            className="w-full h-full object-contain"
+          />
+
+          {totalImages > 1 && (
+            <>
+              <button
+                onClick={goPrev}
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black text-white p-2 rounded-full"
+              >
+                <ChevronLeft />
+              </button>
+              <button
+                onClick={goNext}
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black text-white p-2 rounded-full"
+              >
+                <ChevronRight />
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Thumbnails */}
+        {totalImages > 1 && (
+          <div className="flex gap-3 mt-4 overflow-x-auto">
+            {images.map((img, i) => (
+              <img
+                key={i}
+                src={img.url}
+                onClick={() => setCurrentImg(i)}
+                className={`w-20 h-20 rounded-lg cursor-pointer border-2 ${
+                  currentImg === i
+                    ? "border-orange-500"
+                    : "border-gray-300"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* DETAILS SECTION */}
+      <div className="max-w-7xl mx-auto px-6 mt-10 grid lg:grid-cols-2 gap-8">
+
+        {/* LEFT SIDE */}
+        <div className="space-y-6">
+          {/* Name + Price */}
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h2 className="text-3xl font-bold">
+              {vehicle.brand} {vehicle.model}
+            </h2>
+
+            <p className="text-gray-500 mt-1 flex items-center">
+              <MapPin size={16} className="mr-1" />
+              Available in India
+            </p>
+
+            <p className="text-4xl font-bold text-orange-500 mt-4">
+              ₹{vehicle.price.toLocaleString()}
+            </p>
+            <p className="text-sm text-gray-500">Ex-showroom price</p>
+
             <button
-              onClick={() => navigate(-1)}
-              className="flex items-center text-white hover:text-orange-500 transition-colors"
+              onClick={() => setShowContactPopup(true)}
+              className="mt-6 w-full bg-black text-white py-3 rounded-lg hover:bg-orange-500 transition"
             >
-              <ArrowLeft size={20} className="mr-2" />
-              Back to Vehicles
+              Contact Dealer
             </button>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-white">Vehicle Details</h1>
-              <p className="mt-2 text-white">Complete specifications and dealer information</p>
+          </div>
+
+          {/* Specifications */}
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h3 className="text-lg font-semibold mb-4">Specifications</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <Spec label="Fuel Type" value={vehicle.fuelType || "Electric"} />
+              <Spec label="Transmission" value={vehicle.transmission || "Automatic"} />
+              <Spec label="Range" value={vehicle.range || "80 km/charge"} />
+              <Spec label="Vehicle Type" value={vehicle.type || "E-Bike"} />
             </div>
+          </div>
+        </div>
+
+        {/* RIGHT SIDE */}
+        <div className="space-y-6">
+          {/* Description */}
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h3 className="text-lg font-semibold mb-2">Description</h3>
+            <p className="text-gray-600 leading-relaxed">
+              {vehicle.description || "No description available."}
+            </p>
+          </div>
+
+          {/* Why Buy */}
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h3 className="text-lg font-semibold mb-3">Why Buy This EV?</h3>
+            <ul className="space-y-2 text-gray-600">
+              <li>⚡ Zero emission & eco-friendly</li>
+              <li>💰 Low running and maintenance cost</li>
+              <li>🔋 Efficient battery performance</li>
+              <li>📱 Smart EV technology</li>
+            </ul>
+          </div>
+
+          {/* Ideal For */}
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h3 className="text-lg font-semibold mb-3">Ideal For</h3>
+            <p className="text-gray-600">
+              Daily commuters, city riders, and eco-conscious users looking for a
+              cost-effective alternative to petrol vehicles.
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid gap-8 lg:grid-cols-2">
-          {/* Image Gallery */}
-          <div className="bg-white rounded-lg border border-gray-300 p-6">
-            {totalImages > 0 ? (
-              <>
-                <div className="relative h-80 bg-gray-100 rounded-lg overflow-hidden mb-4">
-                  <img
-                    src={images[currentImg]?.url || "/placeholder-image.jpg"}
-                    alt={`${vehicle.brand} ${vehicle.model}`}
-                    className="w-full h-full object-contain"
-                    onError={(e) => {
-                      e.target.src = "https://via.placeholder.com/600x400/000000/FFFFFF?text=No+Image";
-                    }}
-                  />
-
-                  {/* Navigation Arrows */}
-                  {totalImages > 1 && (
-                    <>
-                      <button
-                        onClick={goPrev}
-                        className="absolute left-4 top-1/2 transform -translate-y-1/2 p-2 bg-black text-white rounded-full shadow-lg hover:bg-orange-500 transition-colors"
-                      >
-                        <ChevronLeft size={20} />
-                      </button>
-                      <button
-                        onClick={goNext}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 bg-black text-white rounded-full shadow-lg hover:bg-orange-500 transition-colors"
-                      >
-                        <ChevronRight size={20} />
-                      </button>
-                    </>
-                  )}
-                </div>
-
-                {/* Image Counter */}
-                {totalImages > 1 && (
-                  <div className="text-center text-sm text-gray-600 mb-4">
-                    Image {currentImg + 1} of {totalImages}
-                  </div>
-                )}
-
-                {/* Thumbnails */}
-                {totalImages > 1 && (
-                  <div className="flex gap-2 overflow-x-auto pb-2">
-                    {images.map((img, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setCurrentImg(index)}
-                        className={`flex-shrink-0 w-16 h-16 border-2 rounded-lg overflow-hidden transition-all ${
-                          currentImg === index
-                            ? "border-orange-500 shadow-md"
-                            : "border-gray-300 hover:border-gray-400"
-                        }`}
-                      >
-                        <img
-                          src={img.url}
-                          alt={`Thumbnail ${index + 1}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.src = "https://via.placeholder.com/80x80/000000/FFFFFF?text=Error";
-                          }}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="h-80 flex items-center justify-center bg-gray-100 rounded-lg border-2 border-dashed border-gray-300">
-                <span className="text-gray-500">No Images Available</span>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="mt-6 space-y-3">
-              <button
-                onClick={() => setShowContactPopup(true)}
-                className="w-full px-6 py-3 bg-black text-white rounded-lg hover:bg-orange-500 transition-colors font-medium shadow-lg"
-              >
-                Contact Dealer
-              </button>
-            </div>
-          </div>
-
-          {/* Vehicle Details */}
-          <div className="bg-white rounded-lg border border-gray-300 p-6">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold text-black mb-2">
-                {vehicle.brand} {vehicle.model}
-              </h1>
-              <div className="flex items-center text-gray-600">
-                <MapPin size={18} className="mr-2" />
-                <span>Available for purchase</span>
-              </div>
-            </div>
-
-            {/* Price Section - Matching AllVehicles style */}
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-4xl font-bold text-black">
-                ₹{formatPrice(vehicle.price)}
-              </p>
-              <p className="text-sm text-gray-600">Ex-showroom price</p>
-            </div>
-
-            <div className="mb-6">
-              <h3 className="font-semibold text-black mb-3 text-lg">Description</h3>
-              <p className="text-gray-700 leading-relaxed">
-                {vehicle.description || "No description available for this vehicle."}
-              </p>
-            </div>
-
-            {/* Specifications Grid - Matching AllVehicles card style */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <p className="text-sm text-gray-600 mb-1">Vehicle Type</p>
-                <p className="font-semibold text-black">{vehicle.type || "E-Bike"}</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <p className="text-sm text-gray-600 mb-1">Fuel Type</p>
-                <p className="font-semibold text-black">{vehicle.fuelType || "Electric"}</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <p className="text-sm text-gray-600 mb-1">Transmission</p>
-                <p className="font-semibold text-black">{vehicle.transmission || "Automatic"}</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <p className="text-sm text-gray-600 mb-1">Range</p>
-                <p className="font-semibold text-black">{vehicle.range || "80 km/charge"}</p>
-              </div>
-            </div>
-
-            {/* Additional Specifications */}
-            <div className="border-t border-gray-200 pt-6">
-              <h3 className="font-semibold text-black mb-3 text-lg">Key Features</h3>
-              <ul className="grid grid-cols-1 gap-2 text-gray-700">
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-orange-500 rounded-full mr-3"></span>
-                  Eco-friendly electric vehicle
-                </li>
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-orange-500 rounded-full mr-3"></span>
-                  Low maintenance costs
-                </li>
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-orange-500 rounded-full mr-3"></span>
-                  Fast charging capability
-                </li>
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-orange-500 rounded-full mr-3"></span>
-                  Smart connectivity features
-                </li>
-              </ul>
-            </div>
-
-            {/* Rating Section */}
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <div className="flex items-center">
-                <div className="flex items-center bg-gray-50 px-3 py-1 rounded-full border border-gray-200">
-                  <Star size={16} className="text-orange-500 fill-current" />
-                  <span className="ml-1 text-sm font-semibold text-black">4.5</span>
-                </div>
-                <span className="ml-2 text-sm text-gray-600">Customer Rating</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* Contact Dealer Popup */}
+      {/* CONTACT POPUP */}
       {showContactPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6 border border-gray-300">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-black">Contact Dealer</h3>
-              <button
-                onClick={() => setShowContactPopup(false)}
-                className="text-gray-500 hover:text-black transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full relative">
+            <button
+              onClick={() => setShowContactPopup(false)}
+              className="absolute top-4 right-4"
+            >
+              <X />
+            </button>
 
-            <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <p className="text-sm text-gray-600 mb-1">Dealer Name</p>
-                <p className="text-lg font-semibold text-black">
-                  {vehicle.dealerName || "EV Motors"}
-                </p>
-              </div>
+            <h3 className="text-xl font-bold mb-4">Contact Dealer</h3>
 
-              <div className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-lg">
-                <Mail className="text-orange-500" size={20} />
-                <div>
-                  <p className="text-sm text-gray-600">Dealer Email</p>
-                  <p className="font-medium text-black">
-                    {vehicle.dealerEmail || "contact@evmotors.com"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-lg">
-                <Phone className="text-orange-500" size={20} />
-                <div>
-                  <p className="text-sm text-gray-600">Dealer Phone</p>
-                  <p className="font-medium text-black">
-                    {vehicle.dealerPhone || "+91 XXXXX XXXXX"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <p className="text-sm text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-200">
-                  Contact the dealer directly using the information above for test drives and purchase inquiries.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                onClick={() => setShowContactPopup(false)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                Close
-              </button>
-              {/* <button
-                onClick={() => {
-                  // Implement contact action
-                  alert("Contact functionality to be implemented");
-                }}
-                className="px-4 py-2 bg-black text-white rounded-md hover:bg-orange-500 transition-colors"
-              >
-                Send Message
-              </button> */}
-            </div>
+            <ContactRow
+              icon={<Mail className="text-orange-500" />}
+              label="Email"
+              value={vehicle.dealerEmail || "contact@dealer.com"}
+            />
+            <ContactRow
+              icon={<Phone className="text-orange-500" />}
+              label="Phone"
+              value={vehicle.dealerPhone || "+91 9876543210"}
+            />
           </div>
         </div>
       )}
     </div>
   );
 }
+
+/* ---------- Helper Components ---------- */
+
+const Spec = ({ label, value }) => (
+  <div className="bg-gray-100 rounded-lg p-4">
+    <p className="text-sm text-gray-500">{label}</p>
+    <p className="font-semibold">{value}</p>
+  </div>
+);
+
+const ContactRow = ({ icon, label, value }) => (
+  <div className="flex items-center gap-3 border p-3 rounded-lg mb-3">
+    {icon}
+    <div>
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="font-medium">{value}</p>
+    </div>
+  </div>
+);
 
 export default VehicleDetails;
