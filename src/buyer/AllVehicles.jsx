@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Search, Filter, Grid, List, Star, Heart, MapPin, ChevronDown, Loader } from "lucide-react";
 
-function AllVehicles() {
+function AllVehicles({ category }) {
   const [vehicles, setVehicles] = useState([]);
   const [filteredVehicles, setFilteredVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,30 +52,36 @@ function AllVehicles() {
   // Apply filters and search
   useEffect(() => {
     let results = [...vehicles];
-    
-    // Apply search filter
+
+    // Search filter
     if (searchQuery) {
-      results = results.filter(vehicle => 
+      results = results.filter(vehicle =>
         vehicle.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
         vehicle.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
         vehicle.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    
-    // Apply type filter
-    if (selectedTypes.length > 0) {
-      results = results.filter(vehicle => 
-        selectedTypes.some(type => vehicle.model.toLowerCase().includes(type.toLowerCase()))
+
+    // 🔥 Bikes / Scooties filter
+    if (category === "bikes") {
+      results = results.filter(
+        vehicle => vehicle.transmission?.toLowerCase() === "manual"
       );
     }
-    
-    // Apply price filter
-    results = results.filter(vehicle => 
-      vehicle.price >= priceRange[0] && vehicle.price <= priceRange[1]
+
+    if (category === "scooties") {
+      results = results.filter(
+        vehicle => vehicle.transmission?.toLowerCase() === "automatic"
+      );
+    }
+
+    // Price filter
+    results = results.filter(
+      vehicle => vehicle.price >= priceRange[0] && vehicle.price <= priceRange[1]
     );
-    
-    // Apply sorting
-    switch(sortBy) {
+
+    // Sorting
+    switch (sortBy) {
       case "price-low":
         results.sort((a, b) => a.price - b.price);
         break;
@@ -86,12 +92,11 @@ function AllVehicles() {
         results.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         break;
       default:
-        // Default sorting (featured)
         break;
     }
-    
+
     setFilteredVehicles(results);
-  }, [vehicles, searchQuery, sortBy, priceRange, selectedTypes]);
+  }, [vehicles, searchQuery, sortBy, priceRange, selectedTypes, category]);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-IN', {
@@ -198,10 +203,10 @@ function AllVehicles() {
           </div>
 
           {/* Filters Panel */}
-          <div className={`mt-4 ${showFilters ? 'block' : 'hidden'} md:block`}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4 border-t border-gray-300">
+          {/* <div className={`mt-4 ${showFilters ? 'block' : 'hidden'} md:block`}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4 border-t border-gray-300"> */}
               {/* Price Range Filter */}
-              <div>
+              {/* <div>
                 <h3 className="font-medium text-black mb-2">Price Range</h3>
                 <div className="space-y-2">
                   <input
@@ -220,7 +225,7 @@ function AllVehicles() {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Results Count */}
