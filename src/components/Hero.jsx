@@ -1,16 +1,24 @@
-{/* <span className="text-white">⚡</span> */}
+import { useNavigate } from "react-router-dom";
+import About from "../buyer/About";
+
 function Hero() {
+  const navigate = useNavigate();
+
   const name = localStorage.getItem("name"); // Buyer name
-  const role = localStorage.getItem("role"); // Check role
+  const role = localStorage.getItem("role"); // User role
+
+  const handleExploreVehicles = () => {
+    // Always route to login page
+    navigate("/login");
+  };
 
   return (
     <section className="bg-black text-white py-16 px-4">
-      {/* Banner */}
       <div className="text-center max-w-3xl mx-auto">
         {role === "buyer" && name ? (
           <>
             <h2 className="text-4xl font-bold">
-              Welcome, {name} 
+              Welcome, {name}
             </h2>
             <p className="mt-4 text-lg text-gray-300">
               Find your perfect EV ride and enjoy an eco-friendly journey.
@@ -26,11 +34,21 @@ function Hero() {
             </p>
           </>
         )}
+
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-          <button className="px-8 py-3 bg-white text-black rounded-lg text-lg font-semibold hover:bg-gray-200 transition-colors">
+          {/* Explore Vehicles → Login */}
+          <button
+            onClick={handleExploreVehicles}
+            className="px-8 py-3 bg-white text-black rounded-lg text-lg font-semibold hover:bg-gray-200 transition-colors"
+          >
             Explore Vehicles
           </button>
-          <button className="px-8 py-3 border border-white text-white rounded-lg text-lg font-semibold hover:bg-white hover:text-black transition-colors">
+
+          {/* Learn More */}
+          <button
+            onClick={() => navigate("/about")}
+            className="px-8 py-3 border border-white text-white rounded-lg text-lg font-semibold hover:bg-white hover:text-black transition-colors"
+          >
             Learn More
           </button>
         </div>
