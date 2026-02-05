@@ -1,15 +1,19 @@
 import { useNavigate } from "react-router-dom";
-import About from "../buyer/About";
 
 function Hero() {
   const navigate = useNavigate();
 
-  const name = localStorage.getItem("name"); // Buyer name
-  const role = localStorage.getItem("role"); // User role
+  const name = localStorage.getItem("name"); 
+  const role = localStorage.getItem("role"); 
+  const token = localStorage.getItem("token");
 
+  // 🔥 Explore button logic
   const handleExploreVehicles = () => {
-    // Always route to login page
-    navigate("/login");
+    if (token && role === "buyer") {
+      navigate("/buyer/all-vehicles"); // Logged-in buyer → All vehicles
+    } else {
+      navigate("/login"); // Not logged in → Login page
+    }
   };
 
   return (
@@ -36,7 +40,7 @@ function Hero() {
         )}
 
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-          {/* Explore Vehicles → Login */}
+          {/* Explore Vehicles */}
           <button
             onClick={handleExploreVehicles}
             className="px-8 py-3 bg-white text-black rounded-lg text-lg font-semibold hover:bg-gray-200 transition-colors"
